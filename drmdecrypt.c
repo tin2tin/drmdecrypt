@@ -235,7 +235,11 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
    }
 
    memcpy(outdata, data, 188);
-   
+
+   /* only process scrambled content */
+   if(((data[3] & 0xC0) != 0xC0) && ((data[3] & 0xC0) != 0x80))
+     return 0;
+
    trace(TRC_DEBUG, "-------------------");
    trace(TRC_DEBUG, "Trans. Error Indicator: 0x%x", data[2] & 0x80);
    trace(TRC_DEBUG, "Payload Unit start Ind: 0x%x", data[2] & 0x40);
