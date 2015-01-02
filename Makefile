@@ -26,6 +26,12 @@ LDFLAGS	+= -pg
 else
 # for release
 CFLAGS	+= -Ofast
+
+# enable LTO for gcc
+ifeq ($(shell $(CC) --version | grep gcc >/dev/null; echo $$?),0)
+CFLAGS	+= -flto
+LDFLAGS	+= -flto
+endif
 endif
 
 # we need to link to libc/msvcrt
