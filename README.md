@@ -55,11 +55,10 @@ H (2014)   | not supported (unknown key)
 
 ## TODO
 
-- Test with Samsung Series E, F
 - Internal I/O buffer for decrypting
-- default ist BUFSIZ oder besser struct fstat blocksize
+- default is BUFSIZ or better struct fstat blocksize
 - I/O write: write() + O_DIRECT + posix_memalign()
 - I/O read: fread(188) + setvbuf(32k+8, _IOFBF)
 - OpenMP for multiprocessing: #pragma omp parallel for schedule(static)
-- Test with Samsung Series D, E, F
 - compiler flags https://software.intel.com/en-us/blogs/2012/09/26/gcc-x86-performance-hints
+
