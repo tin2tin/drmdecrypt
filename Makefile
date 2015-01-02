@@ -47,8 +47,8 @@ RELDIR	= drmdecrypt-$(VERSION)
 
 ##########################
 
-SRC	= AES.c AESNI.c drmdecrypt.c
-OBJS	= AES.o AESNI.o drmdecrypt.o
+SRC	= AES.c AESNI.c buffer.c drmdecrypt.c
+OBJS	= AES.o AESNI.o buffer.o drmdecrypt.o
 
 all:	drmdecrypt
 

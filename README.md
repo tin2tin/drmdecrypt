@@ -55,7 +55,6 @@ H (2014)   | not supported (unknown key)
 
 ## TODO
 
-- Internal I/O buffer for decrypting
 - default is BUFSIZ or better struct fstat blocksize
 - I/O write: write() + O_DIRECT + posix_memalign()
 - I/O read: fread(188) + setvbuf(32k+8, _IOFBF)

@@ -7,9 +7,12 @@
  * of the GPL v2 license.  See the LICENSE file for details.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
 #include <libgen.h>
 #include <limits.h>
 #include <unistd.h>
@@ -17,6 +20,7 @@
 
 #include "aes.h"
 #include "trace.h"
+#include "buffer.h"
 
 /* Helper macros */
 #define STR_HELPER(x) #x
@@ -224,17 +228,18 @@ int decrypt_aes128cbc(unsigned char *pin, int len, unsigned char *pout)
  *
  * See: http://en.wikipedia.org/wiki/MPEG_transport_stream
  */
-int decode_packet(unsigned char *data, unsigned char *outdata)
+int decode_packet(unsigned char *data)
 {
+   unsigned char tmp[PACKETSIZE];
    int offset;
 
    if(data[0] != 0x47)
    {
       trace(TRC_ERROR, "Not a valid MPEG packet!");
-      return 0;
+      return 1;
    }
 
-   memcpy(outdata, data, 188);
+   memcpy(tmp, data, PACKETSIZE);
    
    trace(TRC_DEBUG, "-------------------");
    trace(TRC_DEBUG, "Trans. Error Indicator: 0x%x", data[2] & 0x80);
@@ -255,12 +260,14 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
       offset += (data[4]+1);
 
    /* remove scrambling bits */
-   outdata[3] &= 0x3f;
+   tmp[3] &= 0x3f;
 
    /* decrypt only full blocks (they seem to avoid padding) */
-   decrypt_aes128cbc(data + offset, ((188 - offset)/BLOCK_SIZE)*BLOCK_SIZE, outdata + offset);
+   decrypt_aes128cbc(data + offset, ((PACKETSIZE - offset)/BLOCK_SIZE)*BLOCK_SIZE, tmp + offset);
 
-   return 1;
+   memcpy(data, tmp, sizeof(tmp));
+
+   return 0;
 }
 
 int decryptsrf(char *srffile, char *outdir)
@@ -268,13 +275,12 @@ int decryptsrf(char *srffile, char *outdir)
    char mdbfile[PATH_MAX];
    char inffile[PATH_MAX];
    char outfile[PATH_MAX];
-   FILE *srffp, *outfp;
+   struct packetbuffer pb;
    int retries, sync_find = 0;
-   unsigned long filesize = 0, foffset = 0;
+   unsigned long filesize = 0;
    unsigned long i;
-   unsigned char buf[1024];
-   unsigned char outdata[1024];
 
+   memset(&pb, '\0', sizeof(pb));
    memset(inffile, '\0', sizeof(inffile));
    memset(mdbfile, '\0', sizeof(mdbfile));
    memset(outfile, '\0', sizeof(outfile));
@@ -299,22 +305,26 @@ int decryptsrf(char *srffile, char *outdir)
 
    trace(TRC_INFO, "Writing to %s", outfile);
 
-   if((outfp = fopen(outfile, "wb")) == NULL)
+   pbinit(&pb);
+
+   pb.fdwrite = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+   if(pb.fdwrite == -1)
    {
       trace(TRC_ERROR, "Cannot open %s for writing", outfile);
       return 1;
    }
 
-   if((srffp = fopen(srffile, "rb")) == NULL)
+   pb.fdread = open(srffile, O_RDONLY);
+   if(pb.fdread == -1)
    {
       trace(TRC_ERROR, "Cannot open %s for reading", srffile);
+      return 1;
    }
 	
 
    /* calculate filesize */
-   fseek(srffp, 0, 2); 
-   filesize = ftell(srffp); 
-   rewind(srffp);
+   filesize = lseek(pb.fdread, 0, SEEK_END);
+   lseek(pb.fdread, 0, SEEK_SET);
 
    trace(TRC_INFO, "Filesize %ld", filesize);
 
@@ -323,26 +333,20 @@ resync:
    /* try to sync */
    sync_find = 0;
    retries = 10;
-   fseek(srffp, foffset, SEEK_SET);
 
    while(sync_find == 0 && retries-- > 0)
    {
-      if(fread(buf, sizeof(unsigned char), sizeof(buf), srffp) != sizeof(buf))
-      {
-         trace(TRC_INFO, "short read while resyncing");
-         break;
-      }
+      pbread(&pb);
 
-      /* search 188byte packets starting with 0x47 */
-      for(i=0; i < (sizeof(buf)-188-188); i++)
+      /* search packets starting with 0x47 */
+      for(i=0; i < (BUFFERSIZE-PACKETSIZE-PACKETSIZE); i++)
       {
-         if (buf[i] == 0x47 && buf[i+188] == 0x47 && buf[i+188+188] == 0x47)
+         if (*(pb.workp+i) == 0x47 && *(pb.workp+i+PACKETSIZE) == 0x47 && *(pb.workp+i+PACKETSIZE+PACKETSIZE) == 0x47)
          {
             sync_find = 1;
-            foffset += i;
-            fseek(srffp, foffset, SEEK_SET);
+            pb.workp += i;
 
-            trace(TRC_INFO, "synced at offset %ld", foffset);
+            trace(TRC_INFO, "synced at offset %ld", pb.workp-pb.startp);
 
             break;
          }
@@ -351,31 +355,33 @@ resync:
 
    if (sync_find)
    {
-      for(i=0; foffset+i < filesize; i+= 188)
+      while(pb.end == 0)
       {
-         if(fread(buf, sizeof(unsigned char), 188, srffp) != 188)
+         pbread(&pb);
+
+         while(pb.workp+PACKETSIZE <= pb.endp)
          {
-            trace(TRC_INFO, "short read while reading stream");
-            break;
+            if (*(pb.workp) == 0x47)
+            {
+               decode_packet((unsigned char *)pb.workp);
+               pb.workp += PACKETSIZE;
+            }
+            else
+            {
+               pbwrite(&pb);
+               goto resync;
+            }
          }
 
-         if (buf[0] == 0x47)
-         {
-            decode_packet(buf, outdata);
-            fwrite(outdata, sizeof(unsigned char), 188, outfp);
-         }
-         else
-         {
-            foffset += i;
-            trace(TRC_WARN, "lost sync at %ld", foffset);
-
-            goto resync;
-         }
+         pbwrite(&pb);
       }
    }
 
-   fclose(srffp);
-   fclose(outfp);
+   pbwrite(&pb);
+
+   close(pb.fdwrite);
+   close(pb.fdread);
+   pbfree(&pb);
 
    return 0;
 }
