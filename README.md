@@ -38,8 +38,20 @@ make
 make install
 ```
 
-## Tested with
-- Samsung Series C, D
+## Support status
+
+Samsung has changed the encryption of the PVR recordings a few
+times so here is a small overview of what the situation is right
+now. Situation might change over time.
+
+Model year | Status
+---------- | -------
+C (2010)   | supported
+D (2011)   | supported
+E (2012)   | unknown
+F (2013)   | unknown
+H (2014)   | not supported (unknown key)
+
 
 ## TODO
 
