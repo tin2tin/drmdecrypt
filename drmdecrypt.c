@@ -250,13 +250,17 @@ int decode_packet(unsigned char *data)
    trace(TRC_DEBUG, "Contains payload      : 0x%x", data[3] & 0x10);
    trace(TRC_DEBUG, "Continuity counter    : 0x%x", data[3] & 0x0f);
 
-   if((data[3] & 0x20) == 0x01)
+   /* only process scrambled content */
+   if(((data[3] & 0xC0) != 0xC0) && ((data[3] & 0xC0) != 0x80))
+     return 1;
+
+   if(data[3] & 0x20)
 	   trace(TRC_DEBUG, "Adaptation Field length: 0x%x", data[4]+1);
 
    offset=4;
 
    /* skip adaption field */
-   if((data[3] & 0x20) == 0x01)
+   if(data[3] & 0x20)
       offset += (data[4]+1);
 
    /* remove scrambling bits */
