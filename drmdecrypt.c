@@ -68,32 +68,39 @@ char *filename(char *path, char *newsuffix)
    return path;
 }
 
-int readdrmkey(char *mdbfile)
+int readdrmkey(char *keyfile, int ismdb)
 {
    unsigned char drmkey[0x10];
    char tmpbuf[64];
    unsigned int j;
-   FILE *mdbfp;
+   unsigned int pos;
+   FILE *keyfp;
 
    memset(tmpbuf, '\0', sizeof(tmpbuf));
    memset(&state, 0, sizeof(block_state));
    state.rounds = 10;
 
-   if((mdbfp = fopen(mdbfile, "rb")))
+   if((keyfp = fopen(keyfile, "rb")))
    {
-      fseek(mdbfp, 8, SEEK_SET);
+      if (ismdb)
+	      fseek(keyfp, 8, SEEK_SET);
       for (j = 0; j < 0x10; j++){
-         if(fread(&drmkey[(j&0xc)+(3-(j&3))], sizeof(unsigned char), 1, mdbfp) != 1){
+         if (ismdb)
+            pos = (j&0xc)+(3-(j&3));
+	 else
+            pos = j;
+
+         if(fread(&drmkey[pos], sizeof(unsigned char), 1, keyfp) != 1){
             trace(TRC_ERROR, "short read while reading DRM key");
             return 1;
          }
       }
-      fclose(mdbfp);
+      fclose(keyfp);
 
       for (j = 0; j < sizeof(drmkey); j++)
          sprintf(tmpbuf+strlen(tmpbuf), "%02X ", drmkey[j]);
 
-      trace(TRC_INFO, "drm key successfully read from %s", basename(mdbfile));
+      trace(TRC_INFO, "drm key successfully read from %s", basename(keyfile));
       trace(TRC_INFO, "KEY: %s", tmpbuf);
 
       if(enable_aesni)
@@ -104,7 +111,7 @@ int readdrmkey(char *mdbfile)
       return 0;
    }
    else
-      trace(TRC_ERROR, "mdb file %s not found", basename(mdbfile));
+      trace(TRC_ERROR, "key file %s not found", basename(keyfile));
 
    return 1;
 }
@@ -274,30 +281,40 @@ int decode_packet(unsigned char *data)
    return 0;
 }
 
-int decryptsrf(char *srffile, char *outdir)
+int decryptsrf(char *srffile, char *inkeyfile, char *outdir)
 {
-   char mdbfile[PATH_MAX];
    char inffile[PATH_MAX];
    char outfile[PATH_MAX];
+   char *keyfile;
    struct packetbuffer pb;
-   int retries, sync_find = 0;
+   int ismdb, retries, sync_find = 0;
    unsigned long filesize = 0;
    unsigned long i;
 
    memset(&pb, '\0', sizeof(pb));
    memset(inffile, '\0', sizeof(inffile));
-   memset(mdbfile, '\0', sizeof(mdbfile));
    memset(outfile, '\0', sizeof(outfile));
 
    strcpy(inffile, srffile);
    filename(inffile, "inf");
 
-   strcpy(mdbfile, srffile);
-   filename(mdbfile, "mdb");
+   if (inkeyfile[0] == '\0') {
+      keyfile = malloc(sizeof(char) * PATH_MAX);
+      memset(keyfile, '\0', sizeof(char) * PATH_MAX);
+      strcpy(keyfile, srffile);
+      filename(keyfile, "mdb");
+      ismdb = 1;
+   } else {
+      keyfile = inkeyfile;
+      ismdb = 0;
+   }
 
-   /* read drm key from .mdb file */
-   if(readdrmkey(mdbfile) != 0)
+   /* read drm key from .mdb file or keyfile */
+   if(readdrmkey(keyfile, ismdb) != 0)
       return 1;
+
+   if (ismdb)
+      free(keyfile);
 
    /* generate outfile name based on title from .inf file */
    strcpy(outfile, outdir);
@@ -392,9 +409,10 @@ resync:
 
 void usage(void)
 {
-   fprintf(stderr, "Usage: drmdecrypt [-dqvx][-o outdir] infile.srf ...\n");
+   fprintf(stderr, "Usage: drmdecrypt [-dqvx][-k keyfile][-o outdir] infile.srf ...\n");
    fprintf(stderr, "Options:\n");
    fprintf(stderr, "   -d         Show debugging output\n");
+   fprintf(stderr, "   -k keyfile Use custom key file instead of mdb\n");
    fprintf(stderr, "   -o outdir  Output directory\n");
    fprintf(stderr, "   -q         Be quiet. Only error output.\n");
    fprintf(stderr, "   -v         Version information\n");
@@ -405,13 +423,15 @@ void usage(void)
 int main(int argc, char *argv[])
 {
    char outdir[PATH_MAX];
+   char keyfile[PATH_MAX];
    int ch;
 
    memset(outdir, '\0', sizeof(outdir));
+   memset(keyfile, '\0', sizeof(keyfile));
 
    enable_aesni = Check_CPU_support_AES();
 
-   while ((ch = getopt(argc, argv, "do:qvx")) != -1)
+   while ((ch = getopt(argc, argv, "dk:o:qvx")) != -1)
    {
       switch (ch)
       {
@@ -419,8 +439,11 @@ int main(int argc, char *argv[])
             if(tracelevel > TRC_DEBUG)
                tracelevel--;
             break;
+	 case 'k':
+	    strncpy(keyfile, optarg, sizeof(keyfile));
+	    break;
          case 'o':
-            strcpy(outdir, optarg);
+            strncpy(outdir, optarg, sizeof(outdir));
             break;
          case 'q':
             if(tracelevel < TRC_ERROR)
@@ -457,7 +480,7 @@ int main(int argc, char *argv[])
 
    do
    {
-      if(decryptsrf(argv[optind], outdir) != 0)
+      if(decryptsrf(argv[optind], keyfile, outdir) != 0)
          break;
    }
    while(++optind < argc);
