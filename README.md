@@ -48,9 +48,9 @@ Model year | Status
 ---------- | -------
 C (2010)   | supported
 D (2011)   | supported
-E (2012)   | unknown
-F (2013)   | unknown
-H (2014)   | not supported (unknown key)
+E (2012)   | key file required
+F (2013)   | key file required
+H (2014)   | key file required
 
 
 ## TODO
