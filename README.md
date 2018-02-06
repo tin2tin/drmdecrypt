@@ -21,9 +21,10 @@ This version is fast, POSIX compliant (Linux, FreeBSD, Windows
 ## Usage
 
 ```
-Usage: drmdecrypt [-dqvx][-o outdir] infile.srf ...
+Usage: drmdecrypt [-dqvx][-k keyfile][-o outdir] infile.srf ...
 Options:
    -d         Show debugging output
+   -k keyfile Use custom key file instead of mdb
    -o outdir  Output directory
    -q         Be quiet. Only error output.
    -v         Version information
@@ -48,9 +49,12 @@ Model year | Status
 ---------- | -------
 C (2010)   | supported
 D (2011)   | supported
-E (2012)   | key file required
-F (2013)   | key file required
-H (2014)   | key file required
+E (2012)   | key file required (needs root) see [#13](/../../issues/13)
+F (2013)   | key file required (needs root) see [#13](/../../issues/13)
+H (2014)   | key file required (needs root) see [#13](/../../issues/13)
+J (2015)   | unknown
+K (2016)   | unknown
+M (2017)   | unknown
 
 
 ## TODO
