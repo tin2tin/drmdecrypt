@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/decke/drmdecrypt.svg?branch=master)](https://travis-ci.org/decke/drmdecrypt)
-
 drmdecrypt
 ==========
 
@@ -51,13 +49,25 @@ Model year | Status
 ---------- | -------
 C (2010)   | supported
 D (2011)   | supported
-E (2012)   | key file required (needs root) see [#13](/../../issues/13)
-F (2013)   | key file required (needs root) see [#13](/../../issues/13)
-H (2014)   | key file required (needs root) see [#13](/../../issues/13)
+E (2012)   | key file required (needs root)
+F (2013)   | key file required (needs root)
+H (2014)   | key file required (needs root)
 J (2015)   | unknown
 K (2016)   | unknown
 M (2017)   | unknown
 
+
+## Notes for Models E and later
+
+Samsung has moved the decryption keys into the internal storage of
+the TV. That makes the process more complicated:
+
+1) get root and ssh on your TV
+2) ssh to the box and run PVRdumpkeys.sh to generate .key files from the internal storage
+3) unplug the USB disk and plug on a laptop
+4) run drmdecrypt on it with -k <keyfile> to decrypt the recording
+
+or you can also use SamyGO NoDRM. See: https://forum.samygo.tv/viewtopic.php?t=8105
 
 ## TODO
 
