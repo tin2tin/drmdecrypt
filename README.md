@@ -69,10 +69,3 @@ the TV. That makes the process more complicated:
 
 or you can also use SamyGO NoDRM. See: https://forum.samygo.tv/viewtopic.php?t=8105
 
-## TODO
-
-- default is BUFSIZ or better struct fstat blocksize
-- I/O write: write() + O_DIRECT + posix_memalign()
-- I/O read: fread(188) + setvbuf(32k+8, _IOFBF)
-- OpenMP for multiprocessing: #pragma omp parallel for schedule(static)
-
