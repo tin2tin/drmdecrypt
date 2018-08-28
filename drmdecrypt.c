@@ -477,7 +477,10 @@ int main(int argc, char *argv[])
 
    /* set and verify outdir */
    if(strlen(outdir) < 1)
-      strcpy(outdir, dirname(argv[optind]));
+   {
+      strcpy(outdir, argv[optind]);
+      strcpy(outdir, dirname(outdir));
+   }
 
    if(outdir[strlen(outdir)-1] != '/')
       strcat(outdir, "/");
