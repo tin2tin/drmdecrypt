@@ -3,7 +3,7 @@ drmdecrypt
 
 ## Synopsis
 
-drmdecrypt is a tool to decrypt recorded files from Samsung TVs
+drmdecrypt is a tool to decrypt PVR recordings from Samsung TVs
 into standard transport stream format. There are multiple similar
 versions out there based on code from SamyGO and various people
 but they are all either slow, Windows specific, full of bugs or
@@ -32,11 +32,16 @@ Options:
 ```
 
 
-## Building / Installing
+## Building
 
 ```
 make
-make install
+```
+
+of for MinGW (Windows)
+
+```
+CC=gcc make
 ```
 
 ## Support status
