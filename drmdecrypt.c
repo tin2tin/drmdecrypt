@@ -38,7 +38,7 @@
 #ifndef REVISION
 #define REVISION  ""
 #endif
-#define VERSION	  "1.0"
+#define VERSION	  "1.1"
 
 block_state state;
 int enable_aesni = 0;
