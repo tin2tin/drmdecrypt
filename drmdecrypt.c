@@ -26,6 +26,8 @@
 #if defined(_WIN32) || defined(_WIN64)
 #define S_IRGRP (S_IRUSR >> 3)
 #define S_IROTH (S_IRGRP >> 3)
+#else
+#define O_BINARY 0
 #endif
 
 /* Helper macros */
@@ -334,14 +336,14 @@ int decryptsrf(char *srffile, char *inkeyfile, char *outdir)
 
    pbinit(&pb);
 
-   pb.fdwrite = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+   pb.fdwrite = open(outfile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
    if(pb.fdwrite == -1)
    {
       trace(TRC_ERROR, "Cannot open %s for writing", outfile);
       return 1;
    }
 
-   pb.fdread = open(srffile, O_RDONLY);
+   pb.fdread = open(srffile, O_RDONLY | O_BINARY);
    if(pb.fdread == -1)
    {
       trace(TRC_ERROR, "Cannot open %s for reading", srffile);
