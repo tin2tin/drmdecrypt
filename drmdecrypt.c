@@ -22,6 +22,12 @@
 #include "trace.h"
 #include "buffer.h"
 
+/* MinGW compatibility */
+#if defined(_WIN32) || defined(_WIN64)
+#define S_IRGRP (S_IRUSR >> 3)
+#define S_IROTH (S_IRGRP >> 3)
+#endif
+
 /* Helper macros */
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
