@@ -1,8 +1,20 @@
 kind: pipeline
-name: default
+name: gcc
 
 steps:
 - name: build
   image: gcc
+  commands:
+  - make
+
+---
+kind: pipeline
+name: clang
+
+steps:
+- name: build
+  image: teeks99/clang-ubuntu
+  environment:
+    CC: clang
   commands:
   - make
