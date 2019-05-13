@@ -13,8 +13,6 @@ name: clang
 
 steps:
 - name: build
-  image: teeks99/clang-ubuntu
-  environment:
-    CC: clang
+  image: decke/alpine-clang
   commands:
   - make
