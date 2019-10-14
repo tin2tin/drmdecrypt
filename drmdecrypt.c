@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
             break;
          case 'v':
             fprintf(stderr, "drmdecrypt %s (%s)\n\n", VERSION, STR(REVISION));
-            fprintf(stderr, "Source: https://code.bluelife.at/decke/drmdecrypt\n");
+            fprintf(stderr, "Source: https://github.com/decke/drmdecrypt\n");
             fprintf(stderr, "License: GNU General Public License\n");
             exit(EXIT_SUCCESS);
          case 'x':
