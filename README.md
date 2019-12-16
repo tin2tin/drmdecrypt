@@ -9,13 +9,14 @@ versions out there based on code from SamyGO and various people
 but they are all either slow, Windows specific, full of bugs or
 even all together.
 
-This version is fast, POSIX compliant (Linux, FreeBSD, Windows
-(MinGW)) and is focused on a small number of useful features.
+This version is fast, POSIX compliant (Linux, FreeBSD, OSX,
+Windows (MinGW)) and is focused on a small number of useful
+features.
 
 ## Features
 - Reading title and channel from .inf file
 - Bulk decoding multiple files
-- AES-NI support (5x faster)
+- AES-NI support (5x faster) (x86_64 only)
 
 
 ## Usage
