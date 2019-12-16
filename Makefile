@@ -3,7 +3,7 @@
 #
 
 CC	?= cc
-CFLAGS	+= -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -maes
+CFLAGS	+= -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
 LDFLAGS	+= -static
 
 # add git revision if .git exists
@@ -14,7 +14,7 @@ CFLAGS	+= -DREVISION="$(shell git rev-parse --short HEAD)"
 endif
 
 # optimizations
-CFLAGS	+= -Ofast -march=native
+CFLAGS	+= -Ofast
 
 # malloc implementation and link to libc/msvcrt
 ifeq ($(OS),Windows_NT)
@@ -25,9 +25,17 @@ CFLAGS += -DHAVE_POSIX_MEMALIGN
 LDFLAGS	+= -lc
 endif
 
+# x64_64 specifics
+UNAME_P := $(shell uname -p)
+
+ifeq ($UNAME_P),x86_64)
+CFLAGS += -maes -march=native
+SRC += AESNI.c
+endif
+
 ##########################
 
-SRC	= AES.c AESNI.c buffer.c drmdecrypt.c
+SRC	+= AES.c buffer.c drmdecrypt.c
 OBJS	= $(SRC:.c=.o)
 
 all:	drmdecrypt

@@ -16,7 +16,10 @@
 #include <libgen.h>
 #include <limits.h>
 #include <unistd.h>
+
+#ifdef __AES__
 #include <cpuid.h>
+#endif
 
 #include "aes.h"
 #include "trace.h"
@@ -49,14 +52,18 @@ int enable_aesni = 0;
  */
 int Check_CPU_support_AES()
 {
-#if defined(__INTEL_COMPILER)
+#ifdef __AES__
+ #if defined(__INTEL_COMPILER)
    int CPUInfo[4] = {-1};
    __cpuid(CPUInfo, 1);
    return (CPUInfo[2] & 0x2000000);
-#else
+ #else
    unsigned int a=1,b,c,d;
    __cpuid(1, a,b,c,d);
    return (c & 0x2000000);
+ #endif
+#else
+   return 0;
 #endif
 }
 
@@ -111,10 +118,14 @@ int readdrmkey(char *keyfile, int ismdb)
       trace(TRC_INFO, "drm key successfully read from %s", basename(keyfile));
       trace(TRC_INFO, "KEY: %s", tmpbuf);
 
+#ifdef __AES__
       if(enable_aesni)
          block_init_aesni(&state, drmkey, BLOCK_SIZE);
       else
          block_init_aes(&state, drmkey, BLOCK_SIZE);
+#else
+      block_init_aes(&state, drmkey, BLOCK_SIZE);
+#endif
 
       return 0;
    }
@@ -185,10 +196,14 @@ int decrypt_aes128cbc(unsigned char *pin, int len, unsigned char *pout)
 
    for(i=0; i < len; i+=BLOCK_SIZE)
    {
+#ifdef __AES__
       if(enable_aesni)
          block_decrypt_aesni(&state, pin + i, pout + i);
       else
          block_decrypt_aes(&state, pin + i, pout + i);
+#else
+      block_decrypt_aes(&state, pin + i, pout + i);
+#endif
    }
 
    return 0;

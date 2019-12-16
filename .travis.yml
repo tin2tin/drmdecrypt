@@ -2,4 +2,7 @@ language: c
 compiler:
   - clang
   - gcc
+arch:
+  - amd64
+  - arm64
 script: make
