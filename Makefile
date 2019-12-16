@@ -28,13 +28,13 @@ endif
 # Linux/x64_64 specifics
 UNAME_M := $(shell uname -m)
 
-ifeq ($UNAME_M),x86_64)
+ifeq ($(UNAME_M),x86_64)
 CFLAGS += -maes -march=native
 SRC += AESNI.c
 endif
 
 # FreeBSD/amd64 specifics
-ifeq ($UNAME_M),amd64)
+ifeq ($(UNAME_M),amd64)
 CFLAGS += -maes -march=native
 SRC += AESNI.c
 endif
