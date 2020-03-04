@@ -1,15 +1,33 @@
-language: c
-
-os:
-  - linux
-  - osx
-
-compiler:
-  - clang
-  - gcc
-
-arch:
-  - amd64
-  - arm64
-
-script: make
+language: bash
+matrix:
+  include:
+    # amd64 Linux gcc
+    - os: linux
+      arch: amd64
+      compiler: gcc
+      script: make
+    # amd64 Linux clang
+    - os: linux
+      arch: amd64
+      compiler: clang
+      script: make
+    # arm64 Linux gcc
+    - os: linux
+      arch: arm64
+      compiler: gcc
+      script: make
+    # arm64 Linux clang
+    - os: linux
+      arch: arm64
+      compiler: clang
+      script: make
+    # amd64 OSX 10.13
+    - os: osx
+      script: make
+    # amd64 OSX 10.14
+    - os: osx
+      osx_image: xcode11.2
+      script: make
+    # 32bit Windows MinGW
+    - os: windows
+      script: mingw32-make

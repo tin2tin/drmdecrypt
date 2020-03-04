@@ -1,0 +1,18 @@
+name: C
+on: [push]
+jobs:
+  run:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, macos-latest]
+        compiler: [gcc, clang]
+    name: Compile with ${{ matrix.compiler }} on ${{ matrix.operating-system }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Compile
+      env:
+        CC: ${{ matrix.compiler }}
+      run: make
