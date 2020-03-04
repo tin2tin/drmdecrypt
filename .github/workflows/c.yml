@@ -5,9 +5,9 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, macos-latest]
+        operating-system: [ubuntu-latest, macos-latest, windows-latest]
         compiler: [gcc, clang]
-    name: Compile with ${{ matrix.compiler }} on ${{ matrix.operating-system }}
+    name: ${{ matrix.compiler }} on ${{ matrix.operating-system }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
